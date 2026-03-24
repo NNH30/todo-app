@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+
+  # ── API service ─────────────────────────────────────────────
+  api:
+    # Replace 123456789 with your actual AWS account ID
+    image: 123456789.dkr.ecr.us-east-1.amazonaws.com/todo-app:v1
+    ports:
+      - "3000:3000"             # Routing mesh publishes this on ALL nodes
+    environment:
+      DB_HOST: db               # Swarm overlay network resolves "db" to the MySQL container
+      DB_USER: root
+      DB_PASS: MyS3cur3P@ss     # In production, use Docker secrets instead
+      DB_NAME: todo_db
+    deploy:
+      replicas: 3               # 1 container per node across the 3-node cluster
+      update_config:
+        parallelism: 1          # Update 1 replica at a time (zero-downtime)
+        delay: 10s              # Wait 10s between each replica update
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    depends_on:
+      - db
+
+  # ── MySQL service ────────────────────────────────────────────
+  db:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: MyS3cur3P@ss
+      MYSQL_DATABASE: todo_db
+    volumes:
+      - db_data:/var/lib/mysql
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager    # Pin DB to the manager node (single source of truth)
+      restart_policy:
+        condition: on-failure
+
+volumes:
+  db_data:

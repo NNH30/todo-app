@@ -1,0 +1,36 @@
+services:
+
+  # ── API service ─────────────────────────────────────────────
+  api:
+    build: .                          # Build from our Dockerfile
+    ports:
+      - "3000:3000"                   # host:container
+    environment:
+      DB_HOST: db                     # "db" = the service name below — Docker
+      DB_USER: root                   # Compose creates a DNS entry for it
+      DB_PASS: ${DB_PASSWORD}         # Read from .env file (never hard-coded)
+      DB_NAME: todo_db
+    depends_on:
+      db:
+        condition: service_healthy    # Wait for MySQL to pass its health check
+    restart: on-failure
+
+  # ── MySQL service ────────────────────────────────────────────
+  db:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: todo_db
+    ports:
+      - "3306:3306"                   # Optional: lets you connect with a GUI tool
+    volumes:
+      - db_data:/var/lib/mysql                          # Persist data across restarts
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql  # Auto-runs on first boot
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  db_data:    # Named volume — survives "docker compose down" (use -v to wipe it)
