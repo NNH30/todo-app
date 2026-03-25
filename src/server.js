@@ -7,10 +7,6 @@ const PORT = 3000;
 
 app.use(express.json());
 
-// -----------------------------------------------------------
-// DB connection pool — reads credentials from env variables
-// (set via docker-compose / Swarm stack file)
-// -----------------------------------------------------------
 const pool = mysql.createPool({
   host: process.env.DB_HOST || "localhost",
   user: process.env.DB_USER || "root",
@@ -20,10 +16,7 @@ const pool = mysql.createPool({
   connectionLimit: 10,
 });
 
-// -----------------------------------------------------------
-// Health check — also confirms DB is reachable
-// Returns the container hostname so we can see load balancing
-// -----------------------------------------------------------
+
 app.get("/api/health", async (req, res) => {
   try {
     await pool.query("SELECT 1");
@@ -37,9 +30,7 @@ app.get("/api/health", async (req, res) => {
   }
 });
 
-// -----------------------------------------------------------
-// GET /api/tasks — list all tasks (optional ?status= filter)
-// -----------------------------------------------------------
+
 app.get("/api/tasks", async (req, res) => {
   try {
     const { status } = req.query;
@@ -59,9 +50,7 @@ app.get("/api/tasks", async (req, res) => {
   }
 });
 
-// -----------------------------------------------------------
-// GET /api/tasks/:id — get a single task
-// -----------------------------------------------------------
+
 app.get("/api/tasks/:id", async (req, res) => {
   try {
     const [rows] = await pool.query("SELECT * FROM tasks WHERE id = ?", [
@@ -75,10 +64,7 @@ app.get("/api/tasks/:id", async (req, res) => {
   }
 });
 
-// -----------------------------------------------------------
-// POST /api/tasks — create a new task
-// Body: { title, description? }
-// -----------------------------------------------------------
+
 app.post("/api/tasks", async (req, res) => {
   try {
     const { title, description = "" } = req.body;
@@ -101,10 +87,7 @@ app.post("/api/tasks", async (req, res) => {
   }
 });
 
-// -----------------------------------------------------------
-// PATCH /api/tasks/:id — update status or title
-// Body: { status?, title?, description? }
-// -----------------------------------------------------------
+
 app.patch("/api/tasks/:id", async (req, res) => {
   try {
     const { title, description, status } = req.body;
@@ -140,9 +123,7 @@ app.patch("/api/tasks/:id", async (req, res) => {
   }
 });
 
-// -----------------------------------------------------------
-// DELETE /api/tasks/:id — remove a task
-// -----------------------------------------------------------
+
 app.delete("/api/tasks/:id", async (req, res) => {
   try {
     const [result] = await pool.query(

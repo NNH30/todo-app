@@ -1,6 +1,3 @@
--- Runs automatically when the MySQL container first starts
--- (mounted into /docker-entrypoint-initdb.d/)
-
 CREATE DATABASE IF NOT EXISTS todo_db;
 USE todo_db;
 
@@ -13,7 +10,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   updated_at  TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Seed data so there's something to see right away
+
 INSERT INTO tasks (title, description, status) VALUES
   ('Learn Docker basics',      'Images, containers, Dockerfile',         'done'),
   ('Write a Dockerfile',       'Build custom Node.js image',              'done'),
